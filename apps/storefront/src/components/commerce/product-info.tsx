@@ -191,9 +191,9 @@ export function ProductInfo({product, searchParams}: ProductInfoProps) {
             {selectedVariant && (
                 <div className="text-sm">
                     {isInStock ? (
-                        <span className="text-green-600 font-medium">In Stock</span>
+                        <span className="text-green-600 font-medium">En stock</span>
                     ) : (
-                        <span className="text-destructive font-medium">Out of Stock</span>
+                        <span className="text-destructive font-medium">Rupture de stock</span>
                     )}
                 </div>
             )}
@@ -209,18 +209,18 @@ export function ProductInfo({product, searchParams}: ProductInfoProps) {
                     {isAdded ? (
                         <>
                             <CheckCircle2 className="mr-2 h-5 w-5"/>
-                            Added to Cart
+                            Ajouté au panier
                         </>
                     ) : (
                         <>
                             <ShoppingCart className="mr-2 h-5 w-5"/>
                             {isPending
-                                ? 'Adding...'
+                                ? 'Ajout en cours...'
                                 : !selectedVariant && product.optionGroups.length > 0
-                                    ? 'Select Options'
+                                    ? 'Sélectionnez les options'
                                     : !isInStock
-                                        ? 'Out of Stock'
-                                        : 'Add to Cart'}
+                                        ? 'Rupture de stock'
+                                        : 'Ajouter au panier'}
                         </>
                     )}
                 </Button>

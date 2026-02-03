@@ -33,12 +33,12 @@ export async function CartItems({activeOrder}: { activeOrder: ActiveOrder | null
         return (
             <div className="container mx-auto px-4 py-16">
                 <div className="text-center">
-                    <h1 className="text-3xl font-bold mb-4">Your Cart is Empty</h1>
+                    <h1 className="text-3xl font-bold mb-4">Votre panier est vide</h1>
                     <p className="text-muted-foreground mb-8">
-                        Add some items to your cart to get started
+                        Ajoutez des articles à votre panier pour commencer
                     </p>
                     <Button asChild>
-                        <Link href="/">Continue Shopping</Link>
+                        <Link href="/">Continuer vos achats</Link>
                     </Button>
                 </div>
             </div>

@@ -4,6 +4,7 @@ import {
     DefaultSchedulerPlugin,
     DefaultSearchPlugin,
     VendureConfig,
+    LanguageCode,
 } from '@vendure/core';
 import { defaultEmailHandlers, EmailPlugin, FileBasedTemplateLoader } from '@vendure/email-plugin';
 import { AssetServerPlugin } from '@vendure/asset-server-plugin';
@@ -11,6 +12,8 @@ import { DashboardPlugin } from '@vendure/dashboard/plugin';
 import { GraphiqlPlugin } from '@vendure/graphiql-plugin';
 import 'dotenv/config';
 import path from 'path';
+import { validateBankPermission } from './custom/custom-fields-validation';
+import { sellerValidationHandler } from './plugins/sellerHandling/seller-validation-handler';
 
 const IS_DEV = process.env.APP_ENV === 'dev';
 const serverPort = +process.env.PORT || 3000;
@@ -41,10 +44,12 @@ export const config: VendureConfig = {
     },
     dbConnectionOptions: {
         type: 'postgres',
+        
         // See the README.md "Migrations" section for an explanation of
         // the `synchronize` and `migrations` options.
         synchronize: false,
         migrations: [path.join(__dirname, './migrations/*.+(js|ts)')],
+        
         logging: false,
         database: process.env.DB_NAME,
         schema: process.env.DB_SCHEMA,
@@ -58,7 +63,38 @@ export const config: VendureConfig = {
     },
     // When adding or altering custom field definitions, the database will
     // need to be updated. See the "Migrations" section in README.md.
-    customFields: {},
+    customFields: {
+        Seller: [
+      {
+        name: 'matriculeFiscal',
+        type: 'string',
+        label: [{ languageCode: LanguageCode.fr, value: 'Matricule Fiscal (MF)' }],
+        // Indispensable pour la validation légale
+        nullable: true, 
+      },
+      {
+        name: 'ribBancaire',
+        type: 'string',
+        label: [{ languageCode: LanguageCode.fr, value: 'RIB Amen Bank' }],
+        nullable: true,
+      },
+      {
+        name: 'isValidatedByBank',
+        type: 'boolean',
+        public: false,
+        defaultValue: false,
+       validate: validateBankPermission as any,
+        ui: { 
+        component: 'boolean-form-input',
+        // Seuls les administrateurs avec cette permission verront le champ
+        readOnly: false, 
+        permission: 'UpdateSettings' // Ou une permission personnalisée 'ValidateBankDetails'
+    }
+
+      }
+    ],  
+
+    },
     plugins: [
         GraphiqlPlugin.init(),
         AssetServerPlugin.init({
@@ -76,7 +112,10 @@ export const config: VendureConfig = {
             devMode: true,
             outputPath: path.join(__dirname, '../static/email/test-emails'),
             route: 'mailbox',
-            handlers: defaultEmailHandlers,
+            handlers:[
+        ...defaultEmailHandlers, // On garde les handlers par défaut
+        sellerValidationHandler  
+    ],
             templateLoader: new FileBasedTemplateLoader(path.join(__dirname, '../static/email/templates')),
             globalTemplateVars: {
                 // The following variables will change depending on your storefront implementation.

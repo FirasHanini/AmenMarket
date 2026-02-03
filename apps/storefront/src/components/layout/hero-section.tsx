@@ -15,7 +15,7 @@ export function HeroSection() {
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
                     <Button asChild size="lg" className="min-w-[200px] bg-[#008751] hover:bg-[#007043] text-white border-none transition-colors">
                         <Link href="/search">
-                        Shop Now
+                        Acheter maintenant
                         </Link>
                     </Button>
                         

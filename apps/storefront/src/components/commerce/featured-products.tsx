@@ -28,7 +28,7 @@ export async function FeaturedProducts() {
 
     return (
         <ProductCarousel
-            title="Featured Products"
+            title="À la une"
             products={products}
         />
     )
