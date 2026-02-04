@@ -6,7 +6,7 @@ import {redirect} from 'next/navigation';
 
 
 const RegisterSellerMutation = `
-  mutation RegisterSeller($input: any) {
+  mutation RegisterSeller($input: RegisterSellerInput!) {
     registerSellerAccount(input: $input) {
       id
       name
@@ -27,10 +27,12 @@ export async function registerAction(prevState: { error?: string } | undefined, 
         return {error: 'Adresse e-mail et mot de passe sont requis.'};
     }
 
+    
     if (isSeller) {
         const matriculeFiscal = formData.get('matriculeFiscal') as string;
         const rib = formData.get('rib') as string;
         const shopName = formData.get('shopName') as string;
+        console.log("Tentative d'inscription Vendeur pour:", emailAddress);
          // --- CAS VENDEUR ---
             // On utilise directement un fetch car "mutate" pointe probablement vers la Shop API
             // alors que la création de Seller se fait souvent via l'Admin API (port 3000/admin-api)
@@ -41,7 +43,7 @@ export async function registerAction(prevState: { error?: string } | undefined, 
                     query: RegisterSellerMutation,
                     variables: {
                         input: {
-                            shopName,
+                         //   shopName,
                             email: emailAddress,
                             firstName,
                             lastName,
@@ -65,7 +67,7 @@ export async function registerAction(prevState: { error?: string } | undefined, 
 
 
     }else {
-    
+    console.log("Tentative d'inscription  pour:", emailAddress);
 
 
     const result = await mutate(RegisterCustomerAccountMutation, {

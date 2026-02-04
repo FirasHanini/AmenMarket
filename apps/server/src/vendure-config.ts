@@ -14,6 +14,8 @@ import 'dotenv/config';
 import path from 'path';
 import { validateBankPermission } from './custom/custom-fields-validation';
 import { sellerValidationHandler } from './plugins/sellerHandling/seller-validation-handler';
+import { SellerRegistrationPlugin, SellerRegistrationResolver } from './plugins/sellerHandling/registration.resolver';
+
 
 const IS_DEV = process.env.APP_ENV === 'dev';
 const serverPort = +process.env.PORT || 3000;
@@ -104,8 +106,14 @@ export const config: VendureConfig = {
             // be guessed correctly, but for production it will usually need
             // to be set manually to match your production url.
             assetUrlPrefix: IS_DEV ? undefined : 'https://www.my-shop.com/assets/',
+           
+           
         }),
-        DefaultSchedulerPlugin.init(),
+       SellerRegistrationPlugin,
+        
+
+
+    DefaultSchedulerPlugin.init(),
         DefaultJobQueuePlugin.init({ useDatabaseForBuffer: true }),
         DefaultSearchPlugin.init({ bufferUpdates: false, indexStockStatus: true }),
         EmailPlugin.init({
@@ -121,9 +129,9 @@ export const config: VendureConfig = {
                 // The following variables will change depending on your storefront implementation.
                 // Here we are assuming a storefront running at http://localhost:8080.
                 fromAddress: '"example" <noreply@example.com>',
-                verifyEmailAddressUrl: 'http://localhost:8080/verify',
-                passwordResetUrl: 'http://localhost:8080/password-reset',
-                changeEmailAddressUrl: 'http://localhost:8080/verify-email-address-change'
+                verifyEmailAddressUrl: 'http://localhost:3000/verify',
+                passwordResetUrl: 'http://localhost:3000/password-reset',
+                changeEmailAddressUrl: 'http://localhost:3000/verify-email-address-change'
             },
         }),
         DashboardPlugin.init({

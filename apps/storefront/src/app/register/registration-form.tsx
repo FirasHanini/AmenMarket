@@ -22,7 +22,7 @@ const registrationSchema = z.object({
     confirmPassword: z.string(),
     // Champs Vendeur
     isSeller: z.boolean(),
-    shopName: z.string().optional(),
+   // shopName: z.string().optional(),
     matriculeFiscal: z.string().optional(),
     rib: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -30,7 +30,7 @@ const registrationSchema = z.object({
     path: ["confirmPassword"],
 }).refine((data) => {
     if (data.isSeller) {
-        return !!data.shopName && !!data.matriculeFiscal && !!data.rib;
+        return  !!data.matriculeFiscal && !!data.rib;
     }
     return true;
 }, {
@@ -49,7 +49,7 @@ export function RegistrationForm({ redirectTo }: { redirectTo?: string }) {
         defaultValues: {
             emailAddress: '', firstName: '', lastName: '', phoneNumber: '',
             password: '', confirmPassword: '', isSeller: false,
-            shopName: '', matriculeFiscal: '', rib: ''
+             matriculeFiscal: '', rib: ''
         },
     });
 
@@ -105,10 +105,8 @@ export function RegistrationForm({ redirectTo }: { redirectTo?: string }) {
                         {/* CHAMPS VENDEUR CONDITIONNELS */}
                         {isSeller && (
                             <div className="p-4 border-l-4 border-primary bg-primary/5 space-y-4 animate-in fade-in zoom-in duration-300">
-                                <h3 className="font-bold text-sm">Informations Amen Bank</h3>
-                                <FormField control={form.control} name="shopName" render={({ field }) => (
-                                    <FormItem><FormLabel>Nom de la Boutique</FormLabel><FormControl><Input placeholder="Ma Boutique" {...field} /></FormControl><FormMessage /></FormItem>
-                                )} />
+                                <h3 className="font-bold text-sm">Informations Vendeur</h3>
+
                                 <FormField control={form.control} name="matriculeFiscal" render={({ field }) => (
                                     <FormItem><FormLabel>Matricule Fiscal</FormLabel><FormControl><Input placeholder="1234567/A" {...field} /></FormControl><FormMessage /></FormItem>
                                 )} />
