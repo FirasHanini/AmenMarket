@@ -17,7 +17,7 @@
     "start:storefront": "npm run start -w storefront"
   },
   "devDependencies": {
+    "@vendure/create": "^3.5.3",
     "concurrently": "^9.0.0"
   }
 }
-
