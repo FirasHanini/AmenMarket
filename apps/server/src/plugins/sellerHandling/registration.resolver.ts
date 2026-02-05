@@ -12,8 +12,12 @@ import {
     Transaction,
     VendurePlugin,
     PluginCommonModule,
-    UserService
+    UserService,
+    ChannelService, // <--- AJOUTÉ
+    CurrencyCode,   // <--- AJOUTÉ
+    LanguageCode,
 } from '@vendure/core';
+import { SellerMailService } from './sellerMailService';
 
 
 const adminSchemaAdditions = gql`
@@ -39,6 +43,8 @@ export class SellerRegistrationResolver {
         private administratorService: AdministratorService,
         private roleService: RoleService,
         private userService: UserService,
+        private sellerMailService: SellerMailService,
+        private channelService: ChannelService,
     ) {}
 
     @Transaction()
@@ -59,13 +65,26 @@ export class SellerRegistrationResolver {
         const newSeller = await this.sellerService.create(ctx, {
             name: input.firstName + ' ' + input.lastName ,
             customFields: {
-                matriculefiscal: input.matriculeFiscal,
-                ribbancaire: input.rib,
+                matriculeFiscal: input.matriculeFiscal,
+                ribBancaire: input.rib,
                 isValidatedByBank: false // Toujours false par défaut
             }
         });
 
-        // 3. Créer l'Administrator         
+        // 3. CRÉATION DU CHANNEL UNIQUE
+        // Cela permet d'isoler les produits du vendeur
+        const newChannel = await this.channelService.create(ctx, {
+            code: `channel-${newSeller.id}-${input.lastName.toLowerCase()}`,
+            token: `token-${newSeller.id}-${Math.random().toString(36).substr(2, 9)}`,
+            pricesIncludeTax: true,
+            currencyCode: CurrencyCode.TND,
+            defaultLanguageCode: LanguageCode.fr,
+            sellerId: newSeller.id,
+            defaultShippingZoneId: '',
+            defaultTaxZoneId: ''
+        });
+
+        // 4. Créer l'Administrator         
         const newAdmin = await this.administratorService.create(ctx, {
             emailAddress: input.email,
     //        userName: input.email,
@@ -75,7 +94,7 @@ export class SellerRegistrationResolver {
             roleIds: [sellerRole.id],
         });
 
-        // 4. Lier l'Admin au Seller
+        // 5. Lier l'Admin au Seller
         // On utilise une méthode interne pour forcer la liaison au nouveau Seller
         (newAdmin as any).seller = newSeller;
         await this.administratorService.update(ctx, {
@@ -83,14 +102,26 @@ export class SellerRegistrationResolver {
         });
 
 
-        // 5. Générer le token et déclencher l'envoi de l'email
+        // 6. Générer le token et déclencher l'envoi de l'email
         // On récupère l'utilisateur associé à l'administrateur
         const adminWithUser = await this.administratorService.findOne(ctx, newAdmin.id);
         
         if (adminWithUser && adminWithUser.user) {
-            // Cette méthode génère le token et émet l'événement AccountRegistrationEvent
-            // que l'EmailPlugin intercepte pour envoyer le mail.
-            await this.userService.setVerificationToken(ctx, adminWithUser.user);
+            const user = await this.userService.getUserById(
+                ctx,
+                adminWithUser.user.id,
+            );
+            
+
+
+            console.log(`Token généré pour l'utilisateur avant if`);
+
+            if (user) {
+                console.log(`Token généré pour l'utilisateur : ${user.identifier}`);
+                // Cette méthode génère le token et émet l'événement AccountRegistrationEvent
+                // que l'EmailPlugin intercepte pour envoyer le mail.
+                await this.sellerMailService.sendVerificationEmail(ctx, user);
+            }
         }
 
 
@@ -105,6 +136,7 @@ export class SellerRegistrationResolver {
 }
 @VendurePlugin({
     imports: [PluginCommonModule], // <--- Indispensable pour injecter SellerService
+    providers: [SellerMailService],
     adminApiExtensions: {
         schema: adminSchemaAdditions,
         resolvers: [SellerRegistrationResolver],

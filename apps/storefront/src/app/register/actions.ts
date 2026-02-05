@@ -34,8 +34,8 @@ export async function registerAction(prevState: { error?: string } | undefined, 
         const shopName = formData.get('shopName') as string;
         console.log("Tentative d'inscription Vendeur pour:", emailAddress);
          // --- CAS VENDEUR ---
-            // On utilise directement un fetch car "mutate" pointe probablement vers la Shop API
-            // alors que la création de Seller se fait souvent via l'Admin API (port 3000/admin-api)
+            // On utilise directement un fetch car "mutate" pointe  vers la Shop API
+            //   la création de Seller se fait  via l'Admin API (port 3000/admin-api)
             const response = await fetch('http://localhost:3000/admin-api', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -62,7 +62,13 @@ export async function registerAction(prevState: { error?: string } | undefined, 
             }
 
             // Redirection spécifique pour les vendeurs (en attente de validation banque)
-            redirect('/verify-pending-seller');
+            //redirect('/verify-pending-seller');
+
+            const verifyUrl = redirectTo
+        ? `/verify-pending?redirectTo=${encodeURIComponent(redirectTo)}`
+        : '/verify-pending';
+
+    redirect(verifyUrl);
 
 
 

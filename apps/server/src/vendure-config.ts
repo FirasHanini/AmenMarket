@@ -5,6 +5,7 @@ import {
     DefaultSearchPlugin,
     VendureConfig,
     LanguageCode,
+    NativeAuthenticationStrategy,
 } from '@vendure/core';
 import { defaultEmailHandlers, EmailPlugin, FileBasedTemplateLoader } from '@vendure/email-plugin';
 import { AssetServerPlugin } from '@vendure/asset-server-plugin';
@@ -36,6 +37,10 @@ export const config: VendureConfig = {
     },
     authOptions: {
         tokenMethod: ['bearer', 'cookie'],
+        adminAuthenticationStrategy: [new NativeAuthenticationStrategy()],
+        shopAuthenticationStrategy: [new NativeAuthenticationStrategy()],
+
+
         superadminCredentials: {
             identifier: process.env.SUPERADMIN_USERNAME,
             password: process.env.SUPERADMIN_PASSWORD,
@@ -85,15 +90,15 @@ export const config: VendureConfig = {
         type: 'boolean',
         public: false,
         defaultValue: false,
+        label: [{ languageCode: LanguageCode.fr, value: 'Validation Bancaire' }],
        validate: validateBankPermission as any,
         ui: { 
-        component: 'boolean-form-input',
+       // component: 'boolean-form-input',
         // Seuls les administrateurs avec cette permission verront le champ
-        readOnly: false, 
+        readOnly: false,  
         permission: 'UpdateSettings' // Ou une permission personnalisée 'ValidateBankDetails'
-    }
-
-      }
+        }
+      },
     ],  
 
     },
