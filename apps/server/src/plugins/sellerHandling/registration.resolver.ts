@@ -16,6 +16,11 @@ import {
     ChannelService, // <--- AJOUTÉ
     CurrencyCode,   // <--- AJOUTÉ
     LanguageCode,
+   
+    Role,
+    RequestContextService,
+    Administrator,
+    Channel,
 } from '@vendure/core';
 import { SellerMailService } from './sellerMailService';
 
@@ -45,6 +50,7 @@ export class SellerRegistrationResolver {
         private userService: UserService,
         private sellerMailService: SellerMailService,
         private channelService: ChannelService,
+        private requestContextService: RequestContextService,
     ) {}
 
     @Transaction()
@@ -53,16 +59,24 @@ export class SellerRegistrationResolver {
     async registerSellerAccount(@Ctx() ctx: RequestContext, @Args() args: any) {
         const { input } = args;
 
-        // 1. Trouver le rôle "Seller" (Assure-toi de l'avoir créé dans l'Admin UI avant)
-        const allRoles = await this.roleService.findAll(ctx);
-        const sellerRole = allRoles.items.find(r => r.code === 'seller-role' || r.code === 'SellerRole');
-        
-        if (!sellerRole) {
-            throw new InternalServerError('Le rôle Vendeur n est pas configuré sur la plateforme.');
-        }
+        const defaultChannel = await this.channelService.getDefaultChannel(ctx);
+        console.log(`Canal par défaut : ${defaultChannel ? defaultChannel.code : 'Aucun canal trouvé'}`);
+     const systemCtx = await this.requestContextService.create({
+        apiType: 'admin',
+        channelOrToken: defaultChannel,
+    });
+
+    // 3. UTILISEZ 'systemCtx' AU LIEU DE 'ctx' POUR TOUS LES SERVICES
+     const allRoles = await this.roleService.findAll(systemCtx);
+     console.log(`Rôles disponibles : ${allRoles.items.map(r => r.code).join(', ')}`);
+     const sellerRole = allRoles.items.find(r => r.code === 'seller-role' || r.code === 'SellerRole');
+    
+    if (!sellerRole) {
+        throw new InternalServerError('Rôle non trouvé avec les droits système.');
+    }
 
         // 2. Créer le Seller (La Boutique)
-        const newSeller = await this.sellerService.create(ctx, {
+        const newSeller = await this.sellerService.create(systemCtx, {
             name: input.firstName + ' ' + input.lastName ,
             customFields: {
                 matriculeFiscal: input.matriculeFiscal,
@@ -73,7 +87,7 @@ export class SellerRegistrationResolver {
 
         // 3. CRÉATION DU CHANNEL UNIQUE
         // Cela permet d'isoler les produits du vendeur
-        const newChannel = await this.channelService.create(ctx, {
+        const newChannel = await this.channelService.create(systemCtx, {
             code: `channel-${newSeller.id}-${input.lastName.toLowerCase()}`,
             token: `token-${newSeller.id}-${Math.random().toString(36).substr(2, 9)}`,
             pricesIncludeTax: true,
@@ -84,31 +98,63 @@ export class SellerRegistrationResolver {
             defaultTaxZoneId: ''
         });
 
+        if (!(newChannel instanceof Channel)) {
+    throw new InternalServerError('Failed to create channel');
+}
+
+        (systemCtx as any)._permissions = [Permission.SuperAdmin];
+
         // 4. Créer l'Administrator         
-        const newAdmin = await this.administratorService.create(ctx, {
+        const newAdmin = await this.administratorService.create(systemCtx, {
             emailAddress: input.email,
     //        userName: input.email,
             firstName: input.firstName,
             lastName: input.lastName,
             password: input.password,
-            roleIds: [sellerRole.id],
+            roleIds: []//[sellerRole.id],
         });
+
+
+        const sellerPermissions = [
+            Permission.ReadCatalog,
+            Permission.UpdateCatalog,
+            Permission.CreateCatalog,
+            Permission.ReadOrder,
+            Permission.UpdateAsset,
+            ];
+  
+        const adminRole = await this.roleService.create(systemCtx, {
+        description: 'Administrator for New Channel',
+        code: 'new-channel-admin',
+        permissions: sellerPermissions, // or specific permissions
+        channelIds: [newChannel.id], // Assign the Role to the Channel
+    });
+
+    // 2. Assign that Role to the Administrator
+
+
+    await this.administratorService.update(systemCtx, {
+        id: newAdmin.id,
+        roleIds: [adminRole.id], // Pass the ID of the role assigned to the new channel
+    });
+
+
+    
 
         // 5. Lier l'Admin au Seller
         // On utilise une méthode interne pour forcer la liaison au nouveau Seller
         (newAdmin as any).seller = newSeller;
-        await this.administratorService.update(ctx, {
+        await this.administratorService.update(systemCtx, {
             id: newAdmin.id,
         });
 
-
         // 6. Générer le token et déclencher l'envoi de l'email
         // On récupère l'utilisateur associé à l'administrateur
-        const adminWithUser = await this.administratorService.findOne(ctx, newAdmin.id);
+        const adminWithUser = await this.administratorService.findOne(systemCtx, newAdmin.id);
         
         if (adminWithUser && adminWithUser.user) {
             const user = await this.userService.getUserById(
-                ctx,
+                systemCtx,
                 adminWithUser.user.id,
             );
             

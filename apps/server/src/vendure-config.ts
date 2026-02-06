@@ -6,6 +6,7 @@ import {
     VendureConfig,
     LanguageCode,
     NativeAuthenticationStrategy,
+    Seller,
 } from '@vendure/core';
 import { defaultEmailHandlers, EmailPlugin, FileBasedTemplateLoader } from '@vendure/email-plugin';
 import { AssetServerPlugin } from '@vendure/asset-server-plugin';
@@ -75,14 +76,20 @@ export const config: VendureConfig = {
       {
         name: 'matriculeFiscal',
         type: 'string',
-        label: [{ languageCode: LanguageCode.fr, value: 'Matricule Fiscal (MF)' }],
+        label: [
+            { languageCode: LanguageCode.fr, value: 'Matricule Fiscal (MF)' },
+            { languageCode: LanguageCode.en, value: 'Tax Identification Number (TIN)' }
+        ],
         // Indispensable pour la validation légale
         nullable: true, 
       },
       {
         name: 'ribBancaire',
         type: 'string',
-        label: [{ languageCode: LanguageCode.fr, value: 'RIB Amen Bank' }],
+        label: [
+          { languageCode: LanguageCode.fr, value: 'RIB Amen Bank' },
+          { languageCode: LanguageCode.en, value: 'Amen Bank RIB' }
+        ],
         nullable: true,
       },
       {
@@ -90,7 +97,10 @@ export const config: VendureConfig = {
         type: 'boolean',
         public: false,
         defaultValue: false,
-        label: [{ languageCode: LanguageCode.fr, value: 'Validation Bancaire' }],
+        label: [
+            { languageCode: LanguageCode.fr, value: 'Validation Bancaire' },
+            { languageCode: LanguageCode.en, value: 'Bank Validation' }
+        ],
        validate: validateBankPermission as any,
         ui: { 
        // component: 'boolean-form-input',
@@ -99,7 +109,8 @@ export const config: VendureConfig = {
         permission: 'UpdateSettings' // Ou une permission personnalisée 'ValidateBankDetails'
         }
       },
-    ],  
+    ],
+    
 
     },
     plugins: [
