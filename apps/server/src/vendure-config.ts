@@ -16,7 +16,7 @@ import 'dotenv/config';
 import path from 'path';
 import { validateBankPermission } from './custom/custom-fields-validation';
 import { sellerValidationHandler } from './plugins/sellerHandling/seller-validation-handler';
-import { SellerRegistrationPlugin, SellerRegistrationResolver } from './plugins/sellerHandling/registration.resolver';
+import { SellerRegistrationPlugin } from './plugins/sellerHandling/SellerRegistrationPlugin';
 
 
 const IS_DEV = process.env.APP_ENV === 'dev';
@@ -126,6 +126,7 @@ export const config: VendureConfig = {
            
         }),
        SellerRegistrationPlugin,
+    
         
 
 

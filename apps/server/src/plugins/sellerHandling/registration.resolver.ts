@@ -14,13 +14,10 @@ import {
     PluginCommonModule,
     UserService,
     ChannelService, // <--- AJOUTÉ
-    CurrencyCode,   // <--- AJOUTÉ
-    LanguageCode,
-   
-    Role,
+
+  
     RequestContextService,
-    Administrator,
-    Channel,
+  
 } from '@vendure/core';
 import { SellerMailService } from './sellerMailService';
 
@@ -85,22 +82,7 @@ export class SellerRegistrationResolver {
             }
         });
 
-        // 3. CRÉATION DU CHANNEL UNIQUE
-        // Cela permet d'isoler les produits du vendeur
-        const newChannel = await this.channelService.create(systemCtx, {
-            code: `channel-${newSeller.id}-${input.lastName.toLowerCase()}`,
-            token: `token-${newSeller.id}-${Math.random().toString(36).substr(2, 9)}`,
-            pricesIncludeTax: true,
-            currencyCode: CurrencyCode.TND,
-            defaultLanguageCode: LanguageCode.fr,
-            sellerId: newSeller.id,
-            defaultShippingZoneId: '',
-            defaultTaxZoneId: ''
-        });
-
-        if (!(newChannel instanceof Channel)) {
-    throw new InternalServerError('Failed to create channel');
-}
+      
 
         (systemCtx as any)._permissions = [Permission.SuperAdmin];
 
@@ -113,30 +95,6 @@ export class SellerRegistrationResolver {
             password: input.password,
             roleIds: []//[sellerRole.id],
         });
-
-
-        const sellerPermissions = [
-            Permission.ReadCatalog,
-            Permission.UpdateCatalog,
-            Permission.CreateCatalog,
-            Permission.ReadOrder,
-            Permission.UpdateAsset,
-            ];
-  
-        const adminRole = await this.roleService.create(systemCtx, {
-        description: 'Administrator for New Channel',
-        code: 'new-channel-admin',
-        permissions: sellerPermissions, // or specific permissions
-        channelIds: [newChannel.id], // Assign the Role to the Channel
-    });
-
-    // 2. Assign that Role to the Administrator
-
-
-    await this.administratorService.update(systemCtx, {
-        id: newAdmin.id,
-        roleIds: [adminRole.id], // Pass the ID of the role assigned to the new channel
-    });
 
 
     
@@ -180,12 +138,3 @@ export class SellerRegistrationResolver {
 
     
 }
-@VendurePlugin({
-    imports: [PluginCommonModule], // <--- Indispensable pour injecter SellerService
-    providers: [SellerMailService],
-    adminApiExtensions: {
-        schema: adminSchemaAdditions,
-        resolvers: [SellerRegistrationResolver],
-    },
-})
-export class SellerRegistrationPlugin {}
