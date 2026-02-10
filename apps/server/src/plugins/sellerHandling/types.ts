@@ -5,5 +5,6 @@ declare module '@vendure/core' {
     matriculeFiscal?: string;
     ribBancaire?: string;
     isValidatedByBank?: boolean;
+    adminId?: string; // L'ID de l'administrateur lié à ce vendeur
   }
 }

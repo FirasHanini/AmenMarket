@@ -63,14 +63,7 @@ export class SellerRegistrationResolver {
         channelOrToken: defaultChannel,
     });
 
-    // 3. UTILISEZ 'systemCtx' AU LIEU DE 'ctx' POUR TOUS LES SERVICES
-     const allRoles = await this.roleService.findAll(systemCtx);
-     console.log(`Rôles disponibles : ${allRoles.items.map(r => r.code).join(', ')}`);
-     const sellerRole = allRoles.items.find(r => r.code === 'seller-role' || r.code === 'SellerRole');
-    
-    if (!sellerRole) {
-        throw new InternalServerError('Rôle non trouvé avec les droits système.');
-    }
+   
 
         // 2. Créer le Seller (La Boutique)
         const newSeller = await this.sellerService.create(systemCtx, {

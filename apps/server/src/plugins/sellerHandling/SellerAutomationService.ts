@@ -8,6 +8,7 @@ import {
     Role,
     Zone
 } from '@vendure/core';
+import { DEFAULT_SELLER_PERMISSIONS } from './seller-permissions';
 
 @Injectable()
 export class SellerAutomationService {
@@ -34,10 +35,13 @@ export class SellerAutomationService {
             token: Math.random().toString(36).substr(2, 10),
             seller: seller,
             defaultCurrencyCode: CurrencyCode.TND,
+            availableCurrencyCodes: [CurrencyCode.TND],
+            
             defaultLanguageCode: LanguageCode.fr,
             pricesIncludeTax: true,
             defaultShippingZone: defaultZone,
             defaultTaxZone: defaultZone,
+            
         });
         const savedChannel = await channelRepo.save(newChannel);
 
@@ -45,11 +49,7 @@ export class SellerAutomationService {
         const sellerRole = new Role({
             code: `role-seller-${seller.id}`,
             description: `Rôle pour le vendeur ${seller.name}`,
-            permissions: [
-                Permission.ReadCatalog, Permission.UpdateCatalog, Permission.CreateCatalog,
-                Permission.ReadOrder, Permission.UpdateOrder, Permission.UpdateAsset,
-                Permission.Authenticated
-            ],
+            permissions: DEFAULT_SELLER_PERMISSIONS,
             channels: [savedChannel], // On lie au channel qu'on vient de créer
         });
         const savedRole = await roleRepo.save(sellerRole);
@@ -57,26 +57,35 @@ export class SellerAutomationService {
         // 4. Lier l'administrateur au rôle
         // On cherche l'admin qui a ce sellerId
         const admin = await adminRepo.findOne({
-            where: { id: seller.id  },
+            where: { id:  seller.customFields.adminId  },
             relations: ['user', 'user.roles']
         });
 
         if (admin) {
             admin.user.roles.push(savedRole);
             await adminRepo.save(admin);
-            console.log(`✅ Succès : Canal et Rôle créés pour l'admin ${admin.emailAddress}`);
+            console.log(`Succès : Canal et Rôle créés pour l'admin ${admin.emailAddress}`);
         } else {
-            console.error(`❌ Erreur : Aucun administrateur trouvé pour le vendeur ID ${seller.id}`);
+            console.error(`Erreur : Aucun administrateur trouvé pour le vendeur ID ${seller.id}`);
         }
 
         // 5. OPTIONNEL : Ajouter le nouveau canal au SuperAdmin pour qu'il puisse voir la boutique
         const superAdminRole = await roleRepo.findOne({
-            where: { code: 'superadmin-role' }, // ou 'SuperAdmin' selon ta config
+            where: { id: 1 }, // ou 'SuperAdmin' selon ta config
             relations: ['channels']
         });
+
+        console.log(`Rôle SuperAdmin trouvé : ${superAdminRole ? 'Oui' : 'Non'}`);
         if (superAdminRole) {
+            console.log(`Ajout du canal ${savedChannel.code} au rôle SuperAdmin`);
             superAdminRole.channels.push(savedChannel);
             await roleRepo.save(superAdminRole);
         }
+
+
+
+        
+
+
     }
 }

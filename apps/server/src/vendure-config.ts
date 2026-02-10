@@ -109,7 +109,17 @@ export const config: VendureConfig = {
         permission: 'UpdateSettings' // Ou une permission personnalisée 'ValidateBankDetails'
         }
       },
+        {
+            name: 'adminId',
+            type:'string',
+            nullable: true,
+            ui: {
+            component: 'hide-component', // Cache le champ dans le formulaire
+        },
+            
+        }
     ],
+    
     
 
     },
