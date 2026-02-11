@@ -103,8 +103,6 @@ export const config: VendureConfig = {
         ],
        validate: validateBankPermission as any,
         ui: { 
-       // component: 'boolean-form-input',
-        // Seuls les administrateurs avec cette permission verront le champ
         readOnly: false,  
         permission: 'UpdateSettings' // Ou une permission personnalisée 'ValidateBankDetails'
         }
@@ -113,9 +111,14 @@ export const config: VendureConfig = {
             name: 'adminId',
             type:'string',
             nullable: true,
+            internal: true, // Ne pas exposer ce champ dans l'API
+            label: [
+                
+                
+            ],
             ui: {
-            component: 'hide-component', // Cache le champ dans le formulaire
-        },
+            component: 'hide-field', // Cache le champ dans le formulaire
+        }as any,
             
         }
     ],

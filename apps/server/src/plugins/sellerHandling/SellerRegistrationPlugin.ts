@@ -53,7 +53,7 @@ export class SellerRegistrationPlugin implements OnModuleInit {
             const systemCtx = await this.requestContextService.create({
                 apiType: 'admin',
             });
-            await this.automationService.setupSellerAccess(systemCtx,event.entity);
+            await this.automationService.setupSellerAccess(event.ctx,event.entity);
         });
     }
 }

@@ -65,15 +65,7 @@ export class SellerRegistrationResolver {
 
    
 
-        // 2. Créer le Seller (La Boutique)
-        const newSeller = await this.sellerService.create(systemCtx, {
-            name: input.firstName + ' ' + input.lastName ,
-            customFields: {
-                matriculeFiscal: input.matriculeFiscal,
-                ribBancaire: input.rib,
-                isValidatedByBank: false // Toujours false par défaut
-            }
-        });
+        
 
       
 
@@ -90,14 +82,21 @@ export class SellerRegistrationResolver {
         });
 
 
+        // 2. Créer le Seller (La Boutique)
+        const newSeller = await this.sellerService.create(systemCtx, {
+            name: input.firstName + ' ' + input.lastName ,
+            customFields: {
+                matriculeFiscal: input.matriculeFiscal,
+                ribBancaire: input.rib,
+                isValidatedByBank: false ,// Toujours false par défaut
+                adminId: newAdmin.id, // On stocke l'ID de l'admin pour la liaison future
+
+            }
+        });
+
     
 
-        // 5. Lier l'Admin au Seller
-        // On utilise une méthode interne pour forcer la liaison au nouveau Seller
-        (newAdmin as any).seller = newSeller;
-        await this.administratorService.update(systemCtx, {
-            id: newAdmin.id,
-        });
+      
 
         // 6. Générer le token et déclencher l'envoi de l'email
         // On récupère l'utilisateur associé à l'administrateur
@@ -111,7 +110,7 @@ export class SellerRegistrationResolver {
             
 
 
-            console.log(`Token généré pour l'utilisateur avant if`);
+        
 
             if (user) {
                 console.log(`Token généré pour l'utilisateur : ${user.identifier}`);

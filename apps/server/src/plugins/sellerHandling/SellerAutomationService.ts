@@ -1,12 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { 
-    ChannelService, RoleService, AdministratorService, 
-    RequestContext, Permission, LanguageCode, CurrencyCode,
-    TransactionalConnection, Seller, Administrator,
-    isGraphQlErrorResult,
+    RequestContext, 
+    LanguageCode, 
+    CurrencyCode,
+    TransactionalConnection, 
+    Seller,
+     Administrator,
     Channel,
     Role,
-    Zone
+    Zone,
+    User,
+    StockLocationService,
+    StockLocation
 } from '@vendure/core';
 import { DEFAULT_SELLER_PERMISSIONS } from './seller-permissions';
 
@@ -14,14 +19,17 @@ import { DEFAULT_SELLER_PERMISSIONS } from './seller-permissions';
 export class SellerAutomationService {
    constructor(
         private connection: TransactionalConnection,
+        private stockLocationService: StockLocationService,
     ) {}
 
     async setupSellerAccess(ctx: RequestContext, seller: Seller) {
-        // On récupère les repositories (ils ignorent les permissions GraphQL/Admin)
+        // On récupère les repositories (ils ignorent les permissions GraphQL/Admin, pas besoin de contexte spécial)
         const channelRepo = this.connection.getRepository(ctx, Channel);
         const roleRepo = this.connection.getRepository(ctx, Role);
         const zoneRepo = this.connection.getRepository(ctx, Zone);
         const adminRepo = this.connection.getRepository(ctx, Administrator);
+        const userRepo = this.connection.getRepository(ctx, User);
+        const stockLocationRepo = this.connection.getRepository(ctx, StockLocation);
 
         // 1. Trouver une zone (nécessaire pour le channel)
         const zones = await zoneRepo.find();
@@ -50,7 +58,7 @@ export class SellerAutomationService {
             code: `role-seller-${seller.id}`,
             description: `Rôle pour le vendeur ${seller.name}`,
             permissions: DEFAULT_SELLER_PERMISSIONS,
-            channels: [savedChannel], // On lie au channel qu'on vient de créer
+            channels: [savedChannel], 
         });
         const savedRole = await roleRepo.save(sellerRole);
 
@@ -60,10 +68,17 @@ export class SellerAutomationService {
             where: { id:  seller.customFields.adminId  },
             relations: ['user', 'user.roles']
         });
+       
+
+
 
         if (admin) {
+            
+            admin.user.roles=[]
             admin.user.roles.push(savedRole);
-            await adminRepo.save(admin);
+
+            
+            await userRepo.save(admin.user);
             console.log(`Succès : Canal et Rôle créés pour l'admin ${admin.emailAddress}`);
         } else {
             console.error(`Erreur : Aucun administrateur trouvé pour le vendeur ID ${seller.id}`);
@@ -71,7 +86,7 @@ export class SellerAutomationService {
 
         // 5. OPTIONNEL : Ajouter le nouveau canal au SuperAdmin pour qu'il puisse voir la boutique
         const superAdminRole = await roleRepo.findOne({
-            where: { id: 1 }, // ou 'SuperAdmin' selon ta config
+            where: { id: 1 },  // ou 'SuperAdmin' selon ta config
             relations: ['channels']
         });
 
@@ -82,6 +97,18 @@ export class SellerAutomationService {
             await roleRepo.save(superAdminRole);
         }
 
+
+    
+
+    const stockLocation = new StockLocation({
+        name: `Stock ${seller.name}`,
+        description: `Emplacement de stock principal pour ${seller.name}`,
+    });
+    stockLocation.channels = [savedChannel];
+
+    const newStockLocation = await stockLocationRepo.save(stockLocation);
+
+       
 
 
         
