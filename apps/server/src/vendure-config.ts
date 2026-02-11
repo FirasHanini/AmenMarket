@@ -111,7 +111,7 @@ export const config: VendureConfig = {
             name: 'adminId',
             type:'string',
             nullable: true,
-            internal: true, // Ne pas exposer ce champ dans l'API
+      //      internal: true, // Ne pas exposer ce champ dans l'API
             label: [
                 
                 

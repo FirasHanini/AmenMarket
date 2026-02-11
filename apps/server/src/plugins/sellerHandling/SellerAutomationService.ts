@@ -29,7 +29,6 @@ export class SellerAutomationService {
         const zoneRepo = this.connection.getRepository(ctx, Zone);
         const adminRepo = this.connection.getRepository(ctx, Administrator);
         const userRepo = this.connection.getRepository(ctx, User);
-        const stockLocationRepo = this.connection.getRepository(ctx, StockLocation);
 
         // 1. Trouver une zone (nécessaire pour le channel)
         const zones = await zoneRepo.find();
@@ -73,8 +72,7 @@ export class SellerAutomationService {
 
 
         if (admin) {
-            
-            admin.user.roles=[]
+             admin.user.roles=[]
             admin.user.roles.push(savedRole);
 
             
@@ -98,18 +96,26 @@ export class SellerAutomationService {
         }
 
 
-    
-
-    const stockLocation = new StockLocation({
+        const newStockLocation = await this.stockLocationService.create(ctx, {
         name: `Stock ${seller.name}`,
-        description: `Emplacement de stock principal pour ${seller.name}`,
-    });
-    stockLocation.channels = [savedChannel];
+        description: `Dépôt principal pour ${seller.name}`,
+   
+        });
 
-    const newStockLocation = await stockLocationRepo.save(stockLocation);
+        const stockLocation = new StockLocation({
+    name: `Stock ${seller.name}`,
+    description: `Emplacement de stock principal pour ${seller.name}`,
+});
+/*
 
-       
+        // IMPORTANT : Il faut lier la location au canal
+        // Le service a une méthode dédiée pour cela
+        await this.stockLocationService.assignToChannels(ctx, {
+            stockLocationId: newStockLocation.id,
+            channelIds: [savedChannel.id],
+        });
 
+*/
 
         
 
