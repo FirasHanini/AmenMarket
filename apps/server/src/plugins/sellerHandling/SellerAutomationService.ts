@@ -29,6 +29,7 @@ export class SellerAutomationService {
         const zoneRepo = this.connection.getRepository(ctx, Zone);
         const adminRepo = this.connection.getRepository(ctx, Administrator);
         const userRepo = this.connection.getRepository(ctx, User);
+       
 
         // 1. Trouver une zone (nécessaire pour le channel)
         const zones = await zoneRepo.find();
@@ -43,7 +44,7 @@ export class SellerAutomationService {
             seller: seller,
             defaultCurrencyCode: CurrencyCode.TND,
             availableCurrencyCodes: [CurrencyCode.TND],
-            
+            availableLanguageCodes: [LanguageCode.fr],
             defaultLanguageCode: LanguageCode.fr,
             pricesIncludeTax: true,
             defaultShippingZone: defaultZone,
@@ -102,20 +103,17 @@ export class SellerAutomationService {
    
         });
 
-        const stockLocation = new StockLocation({
-    name: `Stock ${seller.name}`,
-    description: `Emplacement de stock principal pour ${seller.name}`,
-});
-/*
+
 
         // IMPORTANT : Il faut lier la location au canal
         // Le service a une méthode dédiée pour cela
-        await this.stockLocationService.assignToChannels(ctx, {
-            stockLocationId: newStockLocation.id,
-            channelIds: [savedChannel.id],
+        await this.stockLocationService.assignStockLocationsToChannel(ctx, {
+            channelId: savedChannel.id,
+            stockLocationIds: [newStockLocation.id],
+             
         });
 
-*/
+
 
         
 

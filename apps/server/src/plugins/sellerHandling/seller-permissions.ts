@@ -22,7 +22,15 @@ export const DEFAULT_SELLER_PERMISSIONS: Permission[] = [
     Permission.ReadFacet,
     Permission.ReadCollection,
     Permission.ReadChannel,
-    // Ajoutez ici d'autres permissions nécessaires pour les vendeurs
-
-    // Tu peux facilement en ajouter d'autres ici plus tard (ex: Permission.ReadPayment)
+    Permission.CreatePromotion,
+    Permission.UpdatePromotion,
+    Permission.ReadPromotion,
+    Permission.DeletePromotion,
+    Permission.CreateStockLocation,
+    Permission.UpdateStockLocation,
+    Permission.ReadStockLocation,
+    Permission.DeleteStockLocation,
+    Permission.ReadTaxCategory,
+    Permission.ReadTaxRate
+    
 ];

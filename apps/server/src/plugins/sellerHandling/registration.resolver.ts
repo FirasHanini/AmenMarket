@@ -8,10 +8,9 @@ import {
     AdministratorService,
     RoleService,
     Permission,
-    InternalServerError,
+ 
     Transaction,
-    VendurePlugin,
-    PluginCommonModule,
+
     UserService,
     ChannelService, // <--- AJOUTÉ
 
@@ -43,7 +42,6 @@ export class SellerRegistrationResolver {
     constructor(
         private sellerService: SellerService,
         private administratorService: AdministratorService,
-        private roleService: RoleService,
         private userService: UserService,
         private sellerMailService: SellerMailService,
         private channelService: ChannelService,
